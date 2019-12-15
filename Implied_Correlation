@@ -1,0 +1,68 @@
+import pandas as pd
+
+def impliedcorrelation(filepath, ):
+    # Read Spreadsheet
+    
+    df = pd.read_excel(filepath)
+
+    # Make lists of collumns
+    typelist = df["Type"].tolist()
+    tickerlist = df["Ticker"].tolist()
+    weightlist = df["Weight"].tolist()
+    volatilitylist = df["3M ATM IV"].tolist()
+    indexticker = tickerlist[0]
+    indexvolatility = volatilitylist[0]
+    stocktickerlist = tickerlist[1:]
+    stockweightlist = weightlist[1:]
+    stockvolatilitylist = volatilitylist[1:]
+
+
+
+    # Numerator
+
+    # Index Volatility Squared
+    indexvolatilitysquared = indexvolatility**2
+
+    # Numerator Summation
+    count = 0
+    x = 0
+    summation1 = 0
+    numeratorxlist = []
+    while count < len(stocktickerlist):
+        x = ((stockweightlist[count]**2)*(stockvolatilitylist[count]**2))
+        summation1 = summation1 + x
+        count = count + 1
+        numeratorxlist.append(x)
+
+    # Numerator Value 
+    numerator = indexvolatilitysquared - summation1
+
+
+
+
+
+    #Denominator
+
+    countinner = 0
+    countouter = 0
+    summation = 0
+    x = 0
+    denominatorxlist = []
+    while countouter < len(stocktickerlist):
+        countinner = countouter + 1
+        while countinner < len(stocktickerlist):
+            stockweightlist2 = stockweightlist
+            stockvolatilitylist2 = stockvolatilitylist
+            x = (stockweightlist2[countouter]*stockweightlist2[countinner]*stockvolatilitylist2[countouter]*stockvolatilitylist2[countinner])
+            summation = summation + x
+            countinner = countinner + 1
+            denominatorxlist.append(x)
+        countouter = countouter + 1
+
+    # Denominator Value
+    denominator = 2 * summation
+
+
+
+    impliedcorrelation = 100 * (numerator / denominator)
+    print(impliedcorrelation)
