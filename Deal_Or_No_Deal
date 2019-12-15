@@ -1,0 +1,331 @@
+import random
+import time
+# Set Up
+
+caselist = []
+x = 1
+while x < 31:
+    caselist.append(x)
+    x = x + 1
+
+    
+prizelist = []
+y = 0
+count = 0
+while count < 30:
+    prizelist.append(y)
+    y = y + 0.25
+    count = count + 1
+random.shuffle(prizelist)
+dictionary = dict(zip(caselist, prizelist))
+EV = sum(prizelist)/30
+
+# User Select
+print("Please select your case.")
+usercase = input()
+caselist.remove(int(usercase))
+
+# Round 1
+print("ROUND 1: Please select 5 cases to open.")
+roundonecaselist = []
+roundoneprizelist = []
+count = 0
+while count < 5:
+    print("Please select from the following cases:")
+    print(caselist)
+    x = int(input()) 
+    if x in caselist:
+        y = dictionary.get(x)
+        print(y)
+        roundonecaselist.append(x)
+        roundoneprizelist.append(y)
+        caselist.remove(x)
+        prizelist.remove(y)
+        count = count + 1
+    else: 
+        print("Case has already been selected. Please select another")
+        print("Please select from the following cases:")
+        print(caselist)
+        x = int(input()) 
+        if x in caselist:
+            y = dictionary.get(x)
+            print(y)
+            roundonecaselist.append(x)
+            roundoneprizelist.append(y)
+            caselist.remove(x)
+            prizelist.remove(y)
+            count = count + 1
+        else: 
+            print("Case has already been selected. Please select another")
+    time.sleep(1)
+EV = sum(prizelist)/len(prizelist)
+print("The Banker's offer is ",  round((EV * .75),2))
+time.sleep(2)
+print("The remaining prizes are:")
+ylist = prizelist.copy()
+ylist.sort(key=float)
+print(ylist)
+time.sleep(2)
+print("Do you except the offer?")
+roundoneanswer = input()
+if roundoneanswer == "yes":
+    print("Congratulations! Your prize is ", round((EV * .75),2))
+else:
+    print("Let's continue to ROUND 2.")
+
+## Round 2
+print("ROUND 2: Please select 5 cases to open.")
+roundtwocaselist = []
+roundtwoprizelist = []
+count = 0
+while count < 5:
+    print("Please select from the following cases:")
+    print(caselist)
+    x = int(input()) 
+    if x in caselist:
+        y = dictionary.get(x)
+        print(y)
+        roundtwocaselist.append(x)
+        roundtwoprizelist.append(y)
+        caselist.remove(x)
+        prizelist.remove(y)
+        count = count + 1
+    else: 
+        print("Case has already been selected. Please select another")
+        print("Please select from the following cases:")
+        print(caselist)
+        x = int(input()) 
+        if x in caselist:
+            y = dictionary.get(x)
+            print(y)
+            roundtwocaselist.append(x)
+            roundtwoprizelist.append(y)
+            caselist.remove(x)
+            prizelist.remove(y)
+            count = count + 1
+        else: 
+            print("Case has already been selected. Please select another")
+    time.sleep(1)
+EV = sum(prizelist)/len(prizelist)
+print("The Banker's offer is ",  round((EV * .75),2))
+time.sleep(2)
+print("The remaining prizes are:")
+ylist = prizelist.copy()
+ylist.sort(key=float)
+print(ylist)
+time.sleep(2)
+print("Do you except the offer?")
+roundtwoanswer = input()
+if roundtwoanswer == "yes":
+    print("Congratulations! Your prize is ", round((EV * .75),2))
+else:
+    print("Let's continue to ROUND 3.")
+    
+# Round 3
+print("ROUND 3: Please select 5 cases to open.")
+roundthreecaselist = []
+roundthreeprizelist = []
+count = 0
+while count < 5:
+    print("Please select from the following cases:")
+    print(caselist)
+    x = int(input()) 
+    if x in caselist:
+        y = dictionary.get(x)
+        print(y)
+        roundthreecaselist.append(x)
+        roundthreeprizelist.append(y)
+        caselist.remove(x)
+        prizelist.remove(y)
+        count = count + 1
+    else: 
+        print("Case has already been selected. Please select another")
+        print("Please select from the following cases:")
+        print(caselist)
+        x = int(input()) 
+        if x in caselist:
+            y = dictionary.get(x)
+            print(y)
+            roundthreecaselist.append(x)
+            roundthreeprizelist.append(y)
+            caselist.remove(x)
+            prizelist.remove(y)
+            count = count + 1
+        else: 
+            print("Case has already been selected. Please select another")
+    time.sleep(1)
+EV = sum(prizelist)/len(prizelist)
+print("The Banker's offer is ",  round((EV * .75),2))
+time.sleep(2)
+print("The remaining prizes are:")
+ylist = prizelist.copy()
+ylist.sort(key=float)
+print(ylist)
+time.sleep(2)
+print("Do you except the offer?")
+roundthreeanswer = input()
+if roundthreeanswer == "yes":
+    print("Congratulations! Your prize is ", round((EV * .75),2))
+else:
+    print("Let's continue to ROUND 4.")
+    
+# Round 4
+print("ROUND 4: Please select 5 cases to open.")
+roundfourcaselist = []
+roundfourprizelist = []
+count = 0
+while count < 5:
+    print("Please select from the following cases:")
+    print(caselist)
+    x = int(input()) 
+    if x in caselist:
+        y = dictionary.get(x)
+        print(y)
+        roundfourcaselist.append(x)
+        roundfourprizelist.append(y)
+        caselist.remove(x)
+        prizelist.remove(y)
+        count = count + 1
+    else: 
+        print("Case has already been selected. Please select another")
+        print("Please select from the following cases:")
+        print(caselist)
+        x = int(input()) 
+        if x in caselist:
+            y = dictionary.get(x)
+            print(y)
+            roundfourcaselist.append(x)
+            roundfourprizelist.append(y)
+            caselist.remove(x)
+            prizelist.remove(y)
+            count = count + 1
+        else: 
+            print("Case has already been selected. Please select another")
+    time.sleep(1)
+EV = sum(prizelist)/len(prizelist)
+print("The Banker's offer is ",  round((EV * .75),2))
+time.sleep(2)
+print("The remaining prizes are:")
+ylist = prizelist.copy()
+ylist.sort(key=float)
+print(ylist)
+time.sleep(2)
+print("Do you except the offer?")
+roundfouranswer = input()
+if roundfouranswer == "yes":
+    print("Congratulations! Your prize is ", round((EV * .75),2))
+else:
+    print("Let's continue to ROUND 5.")
+    
+# Round 5
+print("ROUND 5: Please select 5 cases to open.")
+roundfivecaselist = []
+roundfiveprizelist = []
+count = 0
+while count < 5:
+    print("Please select from the following cases:")
+    print(caselist)
+    x = int(input()) 
+    if x in caselist:
+        y = dictionary.get(x)
+        print(y)
+        roundfivecaselist.append(x)
+        roundfiveprizelist.append(y)
+        caselist.remove(x)
+        prizelist.remove(y)
+        count = count + 1
+    else: 
+        print("Case has already been selected. Please select another")
+        print("Please select from the following cases:")
+        print(caselist)
+        x = int(input()) 
+        if x in caselist:
+            y = dictionary.get(x)
+            print(y)
+            roundfivecaselist.append(x)
+            roundfiveprizelist.append(y)
+            caselist.remove(x)
+            prizelist.remove(y)
+            count = count + 1
+        else: 
+            print("Case has already been selected. Please select another")
+    time.sleep(1)
+EV = sum(prizelist)/len(prizelist)
+print("The Banker's offer is ",  round((EV * .75),2))
+time.sleep(2)
+print("The remaining prizes are:")
+ylist = prizelist.copy()
+ylist.sort(key=float)
+print(ylist)
+time.sleep(2)
+print("Do you except the offer?")
+roundfiveanswer = input()
+if roundfouranswer == "yes":
+    print("Congratulations! Your prize is ", round((EV * .75),2))
+else:
+    print("Let's continue to ROUND 6.")
+    
+# Round 6
+print("ROUND 6: Please select 3 cases to open.")
+roundsixcaselist = []
+roundsixprizelist = []
+count = 0
+while count < 3:
+    print("Please select from the following cases:")
+    print(caselist)
+    x = int(input()) 
+    if x in caselist:
+        y = dictionary.get(x)
+        print(y)
+        roundsixcaselist.append(x)
+        roundsixprizelist.append(y)
+        caselist.remove(x)
+        prizelist.remove(y)
+        count = count + 1
+    else: 
+        print("Case has already been selected. Please select another")
+        print("Please select from the following cases:")
+        print(caselist)
+        x = int(input()) 
+        if x in caselist:
+            y = dictionary.get(x)
+            print(y)
+            roundsixcaselist.append(x)
+            roundsixprizelist.append(y)
+            caselist.remove(x)
+            prizelist.remove(y)
+            count = count + 1
+        else: 
+            print("Case has already been selected. Please select another")
+    time.sleep(1)
+EV = sum(prizelist)/len(prizelist)
+print("The Banker's offer is ",  round((EV * .75),2))
+time.sleep(2)
+print("The remaining prizes are:")
+ylist = prizelist.copy()
+ylist.sort(key=float)
+print(ylist)
+time.sleep(2)
+print("Do you except the offer?")
+roundsixanswer = input()
+if roundfouranswer == "yes":
+    print("Congratulations! Your prize is ", round((EV * .75),2))
+else:
+    print("Let's continue to THE FINAL ROUND.")
+
+# FINAL ROUND
+print("This is the final round. You now have the opportunity to switch cases.")
+print("To keep your case, type 'keep.'")
+print("To swap your case, type 'swap.'")
+finalchoice = input()
+if finalchoice == "keep":
+    print("Let's open your case. Your prize is:")
+    time.sleep(3)
+    y = dictionary.get(int(usercase))
+    print(y)
+else:
+    print("You have elected to swap cases. Your prize is:")
+    time.sleep(3)
+    y = dictionary.get(int(prizelist[0]))
+    print(y)
+    
