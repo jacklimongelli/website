@@ -1,0 +1,313 @@
+from lxml import html
+import requests
+import pandas as pd
+
+# Create Batting URL's
+# Kept in separate cell than data fetch to avoid strange memory issue
+
+standard_batting_urllist = []
+url1nl = "https://www.baseball-reference.com/leagues/NL/"
+url1al = "https://www.baseball-reference.com/leagues/AL/"
+url2 = "-standard-batting.shtml"
+year_start = 1908
+year_end = 2019
+x = 0
+while x < (year_end - year_start + 1):
+    url = url1nl + str(year_start + x) + url2
+    standard_batting_urllist.append(url)
+    url = url1al + str(year_start + x) + url2
+    standard_batting_urllist.append(url)
+    x = x +1
+
+advanced_batting_urllist = []
+url1nl = "https://www.baseball-reference.com/leagues/NL/"
+url1al = "https://www.baseball-reference.com/leagues/AL/"
+url2 = "-advanced-batting.shtml"
+x = 0
+while x < (year_end - year_start + 1):
+    url = url1nl + str(year_start + x) + url2
+    advanced_batting_urllist.append(url)
+    url = url1al + str(year_start + x) + url2
+    advanced_batting_urllist.append(url)
+    x = x +1
+    
+# Get Standard Batting data    
+url_count = 0
+standard_batting_data = []
+team_list = []
+standard_batting_headerlist = []
+for url in standard_batting_urllist:
+    page = requests.get(url)
+    tree = html.fromstring(page.content)
+    teams = tree.xpath('//*[@id="teams_standard_batting"]/tbody//th')
+    data = tree.xpath('//*[@id="teams_standard_batting"]/tbody//td')
+    header = tree.xpath('//*[@id="teams_standard_batting"]/thead//th')
+    
+    # get teams
+    x = 0
+    while x < len(teams):
+        value = teams[x].text_content()
+        if value == "LgAvg":
+            value = 'LgAvg' + url[42:44]
+        team_list.append(value)
+        x = x + 1
+    
+        
+        
+    # get headers
+    if url_count == 0:
+        x = 0
+        while x < len(header):
+            value = header[x].text_content()
+            standard_batting_headerlist.append(value)
+            x = x + 1
+        standard_batting_headerlist.insert(0,'Year')
+        
+        
+    # get data
+    x = 0
+    y = 0
+    len_of_row = 28
+    temp_list =[]
+    while y < len(teams):
+        value = data[x].text_content()
+        temp_list.append(value)
+        x = x + 1
+        if x % len_of_row == 0:
+            y = y + 1
+            # add year index
+            year = url[46:50]
+            temp_list.insert(0,year)
+            standard_batting_data.append(temp_list)
+            temp_list =[] 
+    url_count = url_count + 1
+    
+    
+# Add team names to data lists    
+x = 0    
+while x < len(standard_batting_data):
+    standard_batting_data[x].insert(1, team_list[x])
+    x = x + 1
+
+    
+###########################################################################################################################    
+    
+# Get Advanced Batting data    
+url_count = 0
+advanced_batting_data = []
+team_list = []
+advanced_batting_header_list = []
+for url in advanced_batting_urllist:
+    page = requests.get(url)
+    tree = html.fromstring(page.content)
+    teams = tree.xpath('//*[@id="teams_advanced_batting"]/tbody//th')
+    data = tree.xpath('//*[@id="teams_advanced_batting"]/tbody//td')
+    header = tree.xpath('//*[@id="teams_advanced_batting"]/thead//th')
+    
+    # get teams
+    x = 0
+    while x < len(teams):
+        value = teams[x].text_content()
+        if value == "LgAvg":
+            value = 'LgAvg' + url[43:45]
+        team_list.append(value)
+        x = x + 1
+    
+        
+        
+    # get headers
+    if url_count == 0:
+        x = 0
+        while x < len(header):
+            value = header[x].text_content()
+            advanced_batting_header_list.append(value)
+            x = x + 1
+        advanced_batting_header_list.insert(0,'Year')
+        
+        
+    # get data
+    x = 0
+    y = 0
+    len_of_row = 22
+    temp_list =[]
+    while y < len(teams):
+        value = data[x].text_content()
+        temp_list.append(value)
+        x = x + 1
+        if x % len_of_row == 0:
+            y = y + 1
+            # add year index
+            year = url[46:50]
+            temp_list.insert(0,year)
+            advanced_batting_data.append(temp_list)
+            temp_list =[] 
+    url_count = url_count + 1
+    
+##############################################################################################################################
+    
+
+# Add team names to data lists    
+x = 0    
+while x < len(advanced_batting_data):
+    advanced_batting_data[x].insert(1, team_list[x])
+    x = x + 1
+    
+# Combine two headerlists
+batting_dataframe_header_list = []
+for x in standard_batting_headerlist:
+    batting_dataframe_header_list.append(x)
+for x in advanced_batting_header_list[2:]:
+    batting_dataframe_header_list.append(x)
+    
+# Combine two data lists
+batting_dataframe_list = []
+for x in standard_batting_data:
+    batting_dataframe_list.append(x)
+x = 0
+while x < len(advanced_batting_data):
+    batting_dataframe_list[x].append(advanced_batting_data[x][2:])
+    x = x + 1 
+
+# Clean up data frame list
+batting_dataframe_list_2 = []
+for x in batting_dataframe_list:
+    batting_dataframe_list_2.append(x[0:30])    
+x = 0
+while x < len(batting_dataframe_list_2):
+    for y in batting_dataframe_list[x][30]:
+        batting_dataframe_list_2[x].append(y)
+    x = x + 1
+
+
+    
+# Create Dataframe
+batting_dataframe = pd.DataFrame(batting_dataframe_list_2)
+batting_dataframe.columns = batting_dataframe_header_list
+batting_dataframe.to_excel(r"C:\Users\Jack\Desktop\Stuff\Python\batting_data.xlsx",
+                          sheet_name = 'batting_data')
+
+# Create Pitching URL's
+# Kept in separate cell than data fetch to avoid strange memory issue
+
+standard_pitching_urllist = []
+url1nl = "https://www.baseball-reference.com/leagues/NL/"
+url1al = "https://www.baseball-reference.com/leagues/AL/"
+url2 = "-standard-pitching.shtml"
+year_start = 1908
+year_end = 2019
+x = 0
+while x < (year_end - year_start + 1):
+    url = url1nl + str(year_start + x) + url2
+    standard_pitching_urllist.append(url)
+    url = url1al + str(year_start + x) + url2
+    standard_pitching_urllist.append(url)
+    x = x +1
+
+# Get Pitching data    
+url_count = 0
+standard_pitching_data = []
+team_list = []
+standard_pitching_header_list = []
+for url in standard_pitching_urllist:
+    page = requests.get(url)
+    tree = html.fromstring(page.content)
+    teams = tree.xpath('//*[@id="teams_standard_pitching"]/tbody//th')
+    data = tree.xpath('//*[@id="teams_standard_pitching"]/tbody//td')
+    header = tree.xpath('//*[@id="teams_standard_pitching"]/thead//th')
+    
+    # get teams
+    x = 0
+    while x < len(teams):
+        value = teams[x].text_content()
+        if value == "LgAvg":
+            value = 'LgAvg' + url[43:45]
+        team_list.append(value)
+        x = x + 1
+    
+        
+        
+    # get headers
+    if url_count == 0:
+        x = 0
+        while x < len(header):
+            value = header[x].text_content()
+            standard_pitching_header_list.append(value)
+            x = x + 1
+        standard_pitching_header_list.insert(0,'Year')
+        
+        
+    # get data
+    x = 0
+    y = 0
+    len_of_row = 35
+    temp_list =[]
+    while y < len(teams):
+        value = data[x].text_content()
+        temp_list.append(value)
+        x = x + 1
+        if x % len_of_row == 0:
+            y = y + 1
+            # add year index
+            year = url[46:50]
+            temp_list.insert(0,year)
+            standard_pitching_data.append(temp_list)
+            temp_list =[] 
+    url_count = url_count + 1
+    
+    
+
+
+# Add team names to data lists    
+x = 0    
+while x < len(standard_pitching_data):
+    standard_pitching_data[x].insert(1, team_list[x])
+    x = x + 1
+    
+pitching_dataframe = pd.DataFrame(standard_pitching_data)
+pitching_dataframe.columns = standard_pitching_header_list
+pitching_dataframe.to_excel(r"C:\Users\Jack\Desktop\Stuff\Python\pitching_data.xlsx",
+                          sheet_name = 'pitching_data')
+                          
+# Get Win Totals (no memory issue because it's just one url)
+url = 'https://www.baseball-reference.com/leagues/MLB/index.shtml'
+page = requests.get(url)
+tree = html.fromstring(page.content)
+wins_data = tree.xpath('//*[@id="teams_team_wins3000"]/tbody//td')
+wins_headers = tree.xpath('//*[@id="teams_team_wins3000"]/thead//th')
+
+
+# Get Headers
+wins_header_list = []
+for x in wins_headers:
+    value = x.text_content()
+    wins_header_list.append(value)
+    
+# Get Data
+x = 0
+wins_list = []
+temp_list = []
+while x < len(wins_data):
+    value  = wins_data[x].text_content()
+    temp_list.append(value)
+    x = x + 1
+    if len(temp_list) == 32:
+        wins_list.append(temp_list)
+        temp_list = []
+# Add years to wins list
+x = 0
+while x < len(wins_list):
+    year = 2019 - x
+    wins_list[x].insert(0, year)
+    x = x + 1
+    
+# Create wins Dataframe
+wins_dataframe = pd.DataFrame(wins_list)
+wins_dataframe.columns = wins_header_list
+wins_dataframe.to_excel(r"C:\Users\Jack\Desktop\Stuff\Python\wins_data.xlsx",
+                          sheet_name = 'wins_data')
+
+
+        
+        
+    
+    
