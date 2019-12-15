@@ -1,0 +1,244 @@
+# Packages
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+#import wins
+wins = '/Users/Jack/Desktop/Final/Wins.csv'
+WinsTable = pd.read_csv(wins)
+WinsTable
+
+#import Runs Against
+RunsAgainst = '/Users/Jack/Desktop/Final/Runs Against.csv'
+RunsAgainstTable = pd.read_csv(RunsAgainst)
+RunsAgainstTable
+
+#import Runs 
+Runs = '/Users/Jack/Desktop/Final/Runs.csv'
+RunsTable = pd.read_csv(Runs)
+RunsTable
+
+#import Payroll
+Payroll = '/Users/Jack/Desktop/Final/Payroll.csv'
+PayrollTable = pd.read_csv(Payroll)
+PayrollTable
+# Payroll data is in % of league average
+
+#import Last WS
+LastWS = '/Users/Jack/Desktop/Final/Last WS.csv'
+LastWSTable = pd.read_csv(LastWS)
+LastWSTable
+
+
+# Create new dataframe with just the Year and Winner columns from the original
+RunsTableWinner = RunsTable[['Year','Winner']] 
+# Convert data frame to a list of just the names of the teams that won each world series
+RunsTableWinner2 = (RunsTableWinner.loc[0:113, 'Winner'])
+RunsTableWinner3 = list(RunsTableWinner2)
+# Locate and store the value corresponding to each winner for a given year. 
+# A loop makes the process much easier given the 113 year.
+RunsTableWinner4 = []
+for y in range(0,114):
+    RunsTableWinner4.append(RunsTable.loc[y,RunsTableWinner3[y]])
+# When the loop data was stored in RunsTableWinner4, the string was repeated several times.  
+# To erase the excess data, just the first 115 entries were stored in RunsTableWinner5.
+RunsTableWinner5 = RunsTableWinner4[0:114]
+# Erase years when the value was 0: no world series occured. 
+# This occured in 1904 and 1994 due to business disaggrements between the American League and National League and 
+# a players strike, respectively. 
+RunsTableWinner6 = [x for x in RunsTableWinner5 if x != 0]
+print(RunsTableWinner6)
+# The following cells are the exact same process but for the other data sets. 
+# All explanations and code are the exact same. Only the names of variables will change.
+
+RunsAgainstTableWinner = RunsAgainstTable[['Year','Winner']] 
+RunsAgainstTableWinner2 = (RunsAgainstTableWinner.loc[0:113, 'Winner'])
+RunsAgainstTableWinner3 = list(RunsAgainstTableWinner2)
+RunsAgainstTableWinner4 = []
+for y in range(0,114):
+    RunsAgainstTableWinner4.append(RunsAgainstTable.loc[y,RunsAgainstTableWinner3[y]])
+RunsAgainstTableWinner5 = RunsAgainstTableWinner4[0:114]
+RunsAgainstTableWinner6 = [x for x in RunsAgainstTableWinner5 if x != 0]
+print(RunsAgainstTableWinner2)
+
+WinsTableWinner = WinsTable[['Year','Winner']] 
+WinsTableWinner2 = (WinsTableWinner.loc[0:113, 'Winner'])
+WinsTableWinner3 = list(WinsTableWinner2)
+WinsTableWinner4 = []
+for y in range(0,114):
+    WinsTableWinner4.append(WinsTable.loc[y,WinsTableWinner3[y]])
+WinsTableWinner5 = WinsTableWinner4[0:114]
+WinsTableWinner6 = [x for x in WinsTableWinner5 if x != 0]
+print(WinsTableWinner6)
+
+
+PayrollTableWinner = PayrollTable[['Year','Winner']] 
+PayrollTableWinner2 = (PayrollTableWinner.loc[0:113, 'Winner'])
+PayrollTableWinner3 = list(PayrollTableWinner2)
+# The range is smaller because the only goes back to 1988
+PayrollTableWinner4 = []
+for y in range(0,28):
+    PayrollTableWinner4.append(PayrollTable.loc[y,PayrollTableWinner3[y]])
+PayrollTableWinner5 = PayrollTableWinner4[0:28]
+PayrollTableWinner6 = [x for x in PayrollTableWinner5 if x != 0]
+print(PayrollTableWinner6)
+
+LastWSTableWinner = LastWSTable[['Year','Winner']] 
+LastWSTableWinner2 = (LastWSTableWinner.loc[0:113, 'Winner'])
+LastWSTableWinner3 = list(LastWSTableWinner2)
+LastWSTableWinner4 = []
+for y in range(0,114):
+    LastWSTableWinner4.append(LastWSTable.loc[y,LastWSTableWinner3[y]])
+LastWSTableWinner5 = LastWSTableWinner4[0:114]
+# To remove the 1904 and 1994 values with no winner I could not just delete zero values because there are many years
+# where the same team won consequtively: the second year would have a value of zero years since the teams last win.
+# I created 3 individual lists, which excluded 1904 and 1994 and then combined them into one list
+a = LastWSTableWinner5[0:1]
+b = LastWSTableWinner5[2:91]
+c = LastWSTableWinner5[92:114]
+LastWSTableWinner6 = a + b + c
+
+# m will be used as the x values
+m = range(0,112)
+# sets size of the figure
+plt.figure(figsize=(15,5))
+# plotting of the figure
+plt.plot(m, RunsTableWinner6)
+# x axis range
+plt.xlim(0,113)
+# x axis label
+plt.xlabel("Year's Since 1903")
+# y axis range
+plt.ylim(0,15)
+# y axis label
+plt.ylabel('Runs Scored Ranking')
+# plot title
+plt.title('Runs Scored Ranking of World Series Winner Over Time')
+
+# n will be used for x values
+n = list(range(1,16))
+# creates list of frequencis of each value in range(1,16)
+RunsCount = []
+for l in range(1,16):
+    RunsCount.append(RunsTableWinner6.count(l))
+# sets size of chart
+plt.figure(figsize=(15,5))
+# plots graph
+pyplot.bar(n, RunsCount, align='center')
+# x axis range
+plt.xlim(0,15)
+# x axis label
+plt.xlabel('Ranking')
+# y axis range
+plt.ylim(0,50)
+# y axis label
+plt.ylabel('Frequency')
+# plot title
+plt.title('Frequency of Runs Scored Ranking by World Series Winners')
+# The following cells are the exact same process but for the other data sets. 
+# All explanations and code are the exact same. Only the names of variables will change.
+
+m = range(0,112)
+plt.figure(figsize=(15,5))
+plt.plot(m, RunsAgainstTableWinner6)
+plt.xlim(0,113)
+plt.xlabel("Year's Since 1903")
+plt.ylim(0,15)
+plt.ylabel('Runs Against Ranking')
+plt.title('Runs Against Ranking of World Series Winner Over Time')
+
+n = list(range(1,16))
+RunsAgainstCount = []
+for l in range(1,16):
+    RunsAgainstCount.append(RunsAgainstTableWinner6.count(l))
+plt.figure(figsize=(15,5))
+pyplot.bar(n, RunsAgainstCount, align='center')
+plt.xlim(0,15)
+plt.xlabel('Ranking')
+plt.ylim(0,50)
+plt.ylabel('Frequency')
+plt.title('Frequency of Runs Against Ranking by World Series Winners')
+
+
+
+m = range(0,112)
+plt.figure(figsize=(15,5))
+plt.plot(m, WinsTableWinner6)
+plt.xlim(0,113)
+plt.xlabel("Year's Since 1903")
+plt.ylim(40,80)
+plt.ylabel('Percent of Games Won')
+plt.title('Win Percentage of World Series Winner Over Time')
+
+# Process described above
+q = range(3,9)
+WinsCountDivide = list((int(x/10) for x in WinsTableWinner6))
+WinsCount = []
+for f in range(3,9):
+    WinsCount.append(WinsCountDivide.count(f))
+plt.figure(figsize=(15,5))
+pyplot.bar(q, WinsCount, align='center')
+plt.xlim(3,8)
+plt.xlabel('Win Percentage, measuered in 10% points')
+plt.ylim(0,80)
+plt.ylabel('Frequency')
+plt.title('Frequency of Win Percentage by World Series Winners')
+
+
+
+m = range(0,112)
+plt.figure(figsize=(15,5))
+plt.plot(m, LastWSTableWinner6)
+plt.xlim(0,113)
+plt.xlabel("Year's Since 1903")
+plt.ylim(0,108)
+plt.ylabel('Years Since Last World Series Win')
+plt.title('Years Since Last World Series Win of World Series Winner Over Time')
+
+t = range(0,12)
+LastWSCountDivide = list((int(x/10) for x in LastWSTableWinner6))
+LastWSCount = []
+for f in range(0,12):
+    LastWSCount.append(LastWSCountDivide.count(f))
+plt.figure(figsize=(15,5))
+pyplot.bar(t, LastWSCount, align='center')
+plt.xlim(-1,11)
+plt.xlabel('Years Since Last World Series Win, measuered in 10 years')
+plt.ylim(0,70)
+plt.ylabel('Frequency')
+plt.title('Frequency of Years Since Last World Series Win by World Series Winners')
+
+
+m = range(0,27)
+plt.figure(figsize=(15,5))
+plt.plot(m, PayrollTableWinner6)
+plt.xlim(0,27)
+plt.xlabel("Year's Since 1988")
+plt.ylim(50,230)
+plt.ylabel('Percentage of League Average Payroll')
+plt.title('Percentage of League Average Payroll of World Series Winner Over Time')
+
+t = range(6,23)
+PayrollCountDivide = list((int(x/10) for x in PayrollTableWinner6))
+PayrollCount = []
+for f in range(6,23):
+    PayrollCount.append(PayrollCountDivide.count(f))
+plt.figure(figsize=(15,5))
+pyplot.bar(t, PayrollCount, align='center')
+plt.xlim(5,23)
+plt.xlabel('Payroll Percentage of League Average measuered in 10 % points')
+plt.ylim(0,5)
+plt.ylabel('Frequency')
+plt.title('Frequency of Payroll Percentage of League Average by World Series Winners')
+
+# plotting both lines together 
+m = range(0,112)
+plt.figure(figsize=(20,5))
+plt.plot(m, RunsTableWinner6, 'r') # r changes the color 
+plt.plot(m, RunsAgainstTableWinner6)
+plt.xlim(0,113)
+plt.xlabel("Year's Since 1988")
+plt.ylim(0,14)
+plt.ylabel('Ranking')
+plt.title('Runs Scored and Runs Allowed Ranking of World Series Winner Over Time')
+# Runs Scored is Red, Runs Scored Against is Blue
