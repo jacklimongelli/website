@@ -1,0 +1,41 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+import smtplib
+import time
+
+x = 0
+while x < 2628000:
+    headers = requests.utils.default_headers()
+    headers.update({
+        'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:52.0) Gecko/20100101 Firefox/52.0',
+    })
+    bitcoinLink = requests.get("https://www.investing.com/currencies/btc-usd-historical-data", headers=headers)
+    bitcoinContent =BeautifulSoup(bitcoinLink.content,"lxml")
+    str1 = str(bitcoinContent)
+    str2 = "sb_changepc_945629"
+    position1 = str1.find(str2)
+    newstr1 = str1[int(position1):]
+    newposition1 = newstr1.find(">")
+    endposition2 = newstr1.find("<")
+    change = newstr1[newposition1+1:endposition2]
+    sign = change[0]
+    value = change[1:change.find('%')]
+    if sign == "-":
+        if float(value) > 3:
+            trade = "Stop Loss Sell"
+    else:
+        trade = "J Chilling"
+    print(trade)
+    if trade == "Stop Loss Sell":
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+        #Next, log in to the server
+        server.login("emaautomatednotification", "J7a7c1k4#")
+        #Send the mail
+        msg = trade # The /n separates the message from the headers
+        server.sendmail("emaautomatednotification@gmail.com","jack.limongelli@gmail.com", msg)
+    x = x + 1
+    time.sleep(1200)
