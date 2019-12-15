@@ -1,0 +1,176 @@
+# Packages
+import urllib
+import urllib.request
+import pandas as pd
+import numpy as np
+from astropy.table import Table, Column
+from bs4 import BeautifulSoup
+import urllib.request
+import itertools
+
+# Websites
+website1 = 'http://www.espn.com'
+website2 = 'http://www.foxsports.com'
+website3 = 'http://www.cbssports.com'
+website4 = 'http://sports.yahoo.com'
+website5 = 'http://bleacherreport.com'
+websitelist = (website1, website2, website3, website4, website5)
+
+# Words
+word1 = 'westbrook'
+word2 = 'lavar'
+word3 = 'harrison'
+word4 = 'march'
+word5 = 'harden'
+wordlist = (word1, word2, word3, word4, word5)
+
+# Search websites for the words
+results = []
+for website in websitelist:
+    with urllib.request.urlopen(website) as response:
+        html = response.read()
+        site = urllib.request.urlopen(website).read()
+    for word in wordlist: 
+        if bytes(word, 'utf-8') in site:
+            variable = 'yes'
+        else: 
+            variable = 'no'
+        results.append(variable)
+
+# Present the results 
+y = int(len(wordlist))
+column1 = results[0 : y]
+column2 = results[y : (2 * y)]
+column3 = results[(2 * y) : (3 * y)]
+column4 = results[(3 * y) : (4 * y)]
+column5 = results[(4 * y) : (5 * y)]
+resultsDF = pd.DataFrame(
+    {'Word' : wordlist,
+     website1 : column1,
+     website2 : column2,
+     website3 : column3,
+     website4 : column4,
+     website5 : column5
+    })
+resultsDF
+
+# creates list of all links on given webpages 
+urllistall = []
+for website in websitelist:
+    resp = urllib.request.urlopen(website)
+    soup = BeautifulSoup(resp, from_encoding=resp.info().get_param('charset'))
+    urllist = []
+    for link in soup.find_all('a', href=True):
+        urllist.append(link['href'])
+    results = []    
+    for link in urllist:
+        if 'http' not in link:
+            w = website + link
+        else:
+            w = link
+        results.append(w)
+    urllistall.append(results)
+    
+# Combines list of list to one list 
+listurllistall = list(urllistall)
+t = list(itertools.chain.from_iterable(listurllistall))
+
+# Filters list based on words
+my_new_list = []
+for word in wordlist:
+    z = [x for x in t if word in x] 
+    my_new_list.append(z)
+
+# Removes duplicates and creates final list
+my_new_list_list = list(itertools.chain.from_iterable(my_new_list))
+my_new_list_unique = list(set(my_new_list_list))
+
+# Import Master List
+MasterListFile = '/Users/Jack/Desktop/Viridian/DealTracker/MasterList.csv' 
+MasterList = pd.read_csv(MasterListFile)
+MasterList2 = (MasterList.loc[0:len(MasterList), 'Link'])
+ListMasterList = list(MasterList2)
+
+# Remove links that are already on Master List
+TodaysList = [x for x in my_new_list_unique if x not in ListMasterList]
+
+# Save TodaysList to excel
+TodaysListDF = pd.DataFrame(TodaysList)
+TodaysListDF.to_csv('/Users/Jack/Desktop/Viridian/DealTracker/TodaysList.csv', header=False, index=False)
+
+# Create and save new Master List
+NewMasterList = ['Link'] + TodaysList + ListMasterList 
+NewMasterListDF = pd.DataFrame(NewMasterList)
+NewMasterListDF.to_csv('/Users/Jack/Desktop/Viridian/DealTracker/MasterList.csv', header=False, index=False)
+
+
+# Print Display
+print("There are", len(TodaysList), "links that meet the criteria.")
+print("")
+print(TodaysList)
+
+# Separate links based on word
+e = 'place holder'
+wordcolumn1 = []
+for link in TodaysList:
+    if word1 in link:
+        e = link
+    wordcolumn1.append(e)
+setwordcolumn1 = set(wordcolumn1)
+
+wordcolumn2 = []
+for link in TodaysList:
+    if word2 in link:
+        e = link
+    wordcolumn2.append(e)
+setwordcolumn2 = set(wordcolumn2)
+
+wordcolumn3 = []
+for link in TodaysList:
+    if word3 in link:
+        e = link
+    wordcolumn3.append(e)
+setwordcolumn3 = set(wordcolumn3)
+
+wordcolumn4 = []
+for link in TodaysList:
+    if word4 in link:
+        e = link
+    wordcolumn4.append(e)
+setwordcolumn4 = set(wordcolumn4)
+
+wordcolumn5 = []
+for link in TodaysList:
+    if word5 in link:
+        e = link
+    wordcolumn5.append(e)
+setwordcolumn5 = set(wordcolumn5)
+
+setwordcolumns = (setwordcolumn1, setwordcolumn2, setwordcolumn3, setwordcolumn4, setwordcolumn5)
+longest = max(setwordcolumns, key=len)
+
+# Add enough empty spaces to lists so they have the same length
+newsetwordcolumns = []
+for sets in setwordcolumns:
+    difference = int(int(len(longest)) - len(sets))
+    addonlist = list((' ' * difference))
+    newsets = list((list(sets) + addonlist))
+    newsetwordcolumns.append(newsets)
+listnewsetwordcolumns = list(itertools.chain.from_iterable(newsetwordcolumns))
+dfwordcolumn1 = listnewsetwordcolumns[0:int(len(longest))]
+dfwordcolumn2 = listnewsetwordcolumns[int(len(longest)):(int(len(longest))*2)]
+dfwordcolumn3 = listnewsetwordcolumns[(int(len(longest))*2):(int(len(longest))*3)]
+dfwordcolumn4 = listnewsetwordcolumns[(int(len(longest))*3):(int(len(longest))*4)]
+dfwordcolumn5 = listnewsetwordcolumns[(int(len(longest))*4):(int(len(longest))*5)]
+
+# Present Data
+resultsDF = pd.DataFrame(
+    {word1 : dfwordcolumn1,
+     word2 : dfwordcolumn2,
+     word3 : dfwordcolumn3,
+     word4 : dfwordcolumn4,
+     word5 : dfwordcolumn5
+    })
+
+# Save Data
+resultsDF.to_csv('/Users/Jack/Desktop/Viridian/DealTracker/TodaysListTable.csv', header=True, index=False)
