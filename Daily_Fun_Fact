@@ -1,0 +1,40 @@
+import pandas as pd
+import time
+from smtplib import SMTP as SMTP 
+import smtplib
+
+#list of facts
+df = pd.read_excel(r"C:\Users\Jack\Desktop\Ideas\Facts.xlsx")
+list_of_facts = df.values.tolist()
+fact = list_of_facts[0]
+
+#get the fact
+x = 0
+emails = []
+while x < len(list_of_facts):
+    fact = list_of_facts[x]
+    for email in emails:
+        gmail_user = 'daily.random.factuals@gmail.com'
+        gmail_password = 'jack7714'
+
+        sent_from = gmail_user
+        to = email
+        Subject = 'Daily Factual'
+        body = fact
+
+        email_text = """\
+        From: %s
+        To: %s
+        Subject: %s 
+
+        %s
+        """ % (sent_from, ", ".join(to), Subject, body)
+
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login(gmail_user, gmail_password)
+        server.sendmail(sent_from, to, email_text)
+        server.close()
+    print(fact)
+    x = x + 1
+    time.sleep(86400)
