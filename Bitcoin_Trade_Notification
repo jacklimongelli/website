@@ -1,0 +1,67 @@
+import quandl
+import pandas as pd
+import openpyxl
+from openpyxl import load_workbook
+import xlrd
+import xlwings as xl
+import time
+from coinbase.wallet.client import Client
+client = Client('aaa8a63c13a46abd595822b5768e979c', '4hEwcbkbu4UBkGxWmzXbdwUZVOco1TR8oIT6tonffYp6IOrTWugvNAz+VjHkfhQDRuvu01UR81eV9KgrWgl1wQ==')
+from apscheduler.schedulers.blocking import BlockingScheduler
+pricelist = []
+count = -1
+for x in range(31540000):
+    count = count + 1
+    getstr = str(client.get_buy_price(currency_pair = 'BTC-USD'))
+    shortstr1 = getstr[15:]
+    y = shortstr1.find('"')
+    price = shortstr1[:y]
+    pricelist.insert(0,price)
+
+    dfprice = pd.DataFrame(pricelist)
+    datatable = pd.DataFrame(dfprice)
+    datatable.insert(loc=0, column='Price', value = dfprice)
+    datatable.to_csv("C:/Users/Jack/Desktop/BitCoin 2.0/PythonDataFetch.csv", header=True, index=False)
+
+    if count > 75:
+        book = load_workbook(r"C:\Users\Jack\Desktop\BitCoin 2.0\EMA trading automated.xlsx")
+        writer = pd.ExcelWriter(r"C:\Users\Jack\Desktop\BitCoin 2.0\EMA trading automated.xlsx", engine = 'openpyxl')
+        writer.book = book
+        writer.sheets = dict((ws.title, ws) for ws in book.worksheets)
+
+        datatable.to_excel(writer, "RawData")
+
+        writer.save()
+
+        def df_from_excel(path):
+            app = xl.App(visible=False)
+            book = app.books.open(path)
+            book.save()
+            app.kill()
+
+            return pd.read_excel(path)
+
+        df = df_from_excel(r"C:\Users\Jack\Desktop\BitCoin 2.0\EMA trading automated.xlsx")
+
+        loc = r'C:\Users\Jack\Desktop\BitCoin 2.0\EMA trading automated.xlsx'
+        wb = xlrd.open_workbook(loc)
+        sheet = wb.sheet_by_index(4)
+        x = sheet.cell_value(0,0)
+        print(x)
+
+        import smtplib
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.ehlo()
+        server.starttls()
+        server.ehlo()
+
+        #Next, log in to the server
+        server.login("emaautomatednotification", "J7a7c1k4#")
+
+        #Send the mail
+        if x != "No Trade":
+            msg = x # The /n separates the message from the headers
+            server.sendmail("emaautomatednotification@gmail.com","jack.limongelli@gmail.com", msg)
+    else:
+        print('not enough data')
+    time.sleep(60)
