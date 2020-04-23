@@ -1,0 +1,651 @@
+# PACKAGES
+import requests 
+import pandas as pd
+from lxml import html
+import statistics
+from IPython.display import display
+import matplotlib.pyplot as plt
+import math
+%matplotlib inline
+import numpy as np
+from sklearn.linear_model import LinearRegression
+import plotly.express as px
+import mpld3
+from mpld3 import plugins
+from plotly.offline import init_notebook_mode, iplot
+import plotly.graph_objects as go
+from plotly.graph_objs import *
+init_notebook_mode(connected=True)         
+
+# retrieve data 
+csv_df = pd.read_csv('/Users/Jack/Desktop/WAR_DATA.csv', header=None)
+csv_df_list = csv_df.to_numpy().tolist()
+
+import_data_list = []
+for row in csv_df_list:
+    player = []
+    for x in row:
+        temp_list = []
+        if str(x) != 'nan':
+            x = x[x.find("'")+1:]
+            name = str(x[:x.find("'")])
+            x = x[x.find(",")+2:]
+            year = int(x[:x.find(",")])
+            x = x[x.find(",")+2:]
+            war = float(x[:x.find(",")])
+            x = x[x.find(",")+2:]
+            salary = float(x[:x.find("]")])
+            temp_list.append(name)
+            temp_list.append(year)
+            temp_list.append(war)
+            temp_list.append(salary)
+            player.append(temp_list)
+    import_data_list.append(player)
+    
+    # Premade lists
+
+# data list
+working_data_list = import_data_list
+
+# list of unique seasons
+list_of_years_unique = []
+year = 1871
+while year <= 2019:
+    list_of_years_unique.append(year)
+    year = year + 1
+
+# each player's max year dictionary
+max_year_list = []
+for player in working_data_list:
+    temp_list = []
+    temp_list.append(player[0][0])    
+    temp_list_2 = []
+    for season in player:
+        temp_list_2.append(season[1])
+    temp_list.append(max(temp_list_2))
+    max_year_list.append(temp_list)
+max_year_dict = {}
+for x in max_year_list:
+    max_year_dict[x[0]] = x[1]
+
+# each player's number of seasons dictionary
+number_seasons_list = []
+for player in working_data_list:
+    temp_list = []
+    temp_list.append(player[0][0])
+    temp_list.append(len(player))
+    number_seasons_list.append(temp_list)
+number_seasons_dict = {}
+for x in number_seasons_list:
+    number_seasons_dict[x[0]] = x[1]
+    
+# salary rank dictionary
+# make data frame of each season
+name_list_for_df = []
+year_list_for_df = []
+war_list_for_df = []
+salary_list_for_df = []
+for player in working_data_list:
+    for season in player:
+        name_list_for_df.append(season[0])
+        year_list_for_df.append(season[1])
+        war_list_for_df.append(season[2])
+        salary_list_for_df.append(season[3])
+seasons_dict = {
+    'Name' : name_list_for_df,
+    'Year' : year_list_for_df,
+    'WAR' : war_list_for_df,
+    'Salary' : salary_list_for_df}
+seasons_df = pd.DataFrame(seasons_dict)
+salary_ranked_names = []
+for year in list_of_years_unique:
+    temp_list = []
+    temp_list.append(year)
+    df1 = seasons_df[seasons_df['Year'] == year].sort_values('Salary', ascending=False).reset_index(drop=True)
+    temp_list.append(df1['Name'].tolist())
+    salary_ranked_names.append(temp_list)
+ranked_names_dict = {}
+for x in salary_ranked_names:
+    ranked_names_dict[x[0]] = x[1]
+
+# dictionary of all seasons 
+all_seasons_salary_dict = {}
+for player in working_data_list:
+    for season in player:
+        all_seasons_salary_dict[season[0]+'_'+str(season[1])] = season[3]
+        
+
+
+    
+# user inputs
+athlete = 'Bryce Harper'
+year_1 = 2016
+year_2 = 2018
+year_start = 2001
+percent_variation = 0.06
+number_years = 4
+
+# calculated inputs
+ma_lenth = (year_2 - year_1 + 1)
+first_name = athlete[:athlete.find(' ')]
+last_name = athlete[athlete.find(' ')+1:]
+
+# build list of players who played after year_start
+players_after_start_list = []
+for player in working_data_list:
+    name = player[0][0]
+    if max_year_dict[name] >= year_start:
+        players_after_start_list.append(player)
+
+# build list of players who played enough seasons 
+players_enough_seasons_list = []
+for player in players_after_start_list:
+    name = player[0][0]
+    if number_seasons_dict[name] >= ma_lenth:
+        players_enough_seasons_list.append(player)
+
+# calculate moving averages
+moving_average_war_list = []
+for player in players_enough_seasons_list:
+    temp_war_list = []
+    for season in player:
+        temp_war_list.append(season[2])
+    count = ma_lenth - 1
+    for season in player[(year_2 - year_1):]:
+        temp_list = []
+        moving_average = statistics.mean(temp_war_list[(count - ma_lenth + 1) : (count + 1)]) # mean is not inclusive of second list number
+        temp_list.append(season[0])
+        temp_list.append(season[1])
+        temp_list.append(moving_average)
+        temp_list.append(season[3])
+        count = count + 1
+        moving_average_war_list.append(temp_list)
+
+# find athlete and year moving average
+for season in moving_average_war_list:
+    if season[0] == athlete:
+        if season[1] == year_2:
+            athlete_ma = season[2]
+
+# find seasons with similar war
+similar_average_war_list = []
+for season in moving_average_war_list:
+    if (athlete_ma * (1-percent_variation)) <= season[2] <= (athlete_ma * (1+percent_variation)):
+        if season[0] != athlete:
+            similar_average_war_list.append(season)
+
+# remove seasons before specified year
+similar_average_war_list_2 = []
+for season in similar_average_war_list:
+    if season[1] >= year_start:
+        similar_average_war_list_2.append(season)
+        
+# add in the surrounding seasons
+all_seasons_similar_average_war_list = []
+for season in similar_average_war_list_2:
+    count = (-1 * number_years)
+    year = season[1]
+    while count <= number_years:
+        temp_list = []
+        try:
+            salary = all_seasons_salary_dict[season[0]+'_'+str(count+year)]/1000000
+        except:
+            salary = 'NaN'
+        temp_list.append(season[0])
+        temp_list.append(year+count)
+        temp_list.append(salary)
+        all_seasons_similar_average_war_list.append(temp_list)
+        count = (count + 1)
+
+# replace salary value with salary rank
+all_seasons_similar_average_war_list_2 = []
+for season in all_seasons_similar_average_war_list:
+    if season[2] != 'NaN':
+        salary_percentile = round(100*(1 - (ranked_names_dict[season[1]].index(season[0]) / len(ranked_names_dict[season[1]]))),2)
+        season_new = season[:2]
+        season_new.append(salary_percentile)
+        all_seasons_similar_average_war_list_2.append(season_new)
+    else:
+        all_seasons_similar_average_war_list_2.append(season)
+    
+# combine seasons into individual lists to match with y axis
+similar_players_percentile_graph_list = []
+similar_players_dollar_graph_list = []
+count = 0
+while count < (len(all_seasons_similar_average_war_list_2) / ((2*number_years) + 1)):
+    similar_players_percentile_graph_list.append(all_seasons_similar_average_war_list_2[(count * ((2*number_years) + 1)):((count + 1) * ((2*number_years) + 1))])
+    similar_players_dollar_graph_list.append(all_seasons_similar_average_war_list[(count * ((2*number_years) + 1)):((count + 1) * ((2*number_years) + 1))])
+    count = (count + 1)
+
+# remove name and year from graph list
+similar_players_percentile_graph_list_2 = []
+for season in similar_players_percentile_graph_list:
+    temp_list = []
+    for year in season:
+        temp_list.append(year[2])
+    similar_players_percentile_graph_list_2.append(temp_list)
+similar_players_dollar_graph_list_2 = []
+for season in similar_players_dollar_graph_list:
+    temp_list = []
+    for year in season:
+        temp_list.append(year[2])
+    similar_players_dollar_graph_list_2.append(temp_list) 
+
+# build x axis list
+x_axis_list = []
+count = (-1 * number_years)
+while count <= number_years:
+    x_axis_list.append(count)
+    count = (count + 1)
+
+# build athlete lines
+athlete_salary_list = []
+for x in x_axis_list:
+    year = (year_2 + x)
+    try:
+        salary = all_seasons_salary_dict[athlete+'_'+str(year)]/1000000
+    except:
+        salary = 'NaN'
+    athlete_salary_list.append(salary)
+athlete_percentile_list = []
+for x in x_axis_list:
+    try:
+        rank = 100*(1- (ranked_names_dict[(year_2 + x)].index(athlete) / len(ranked_names_dict[(year_2 + x)])))
+    except:
+        rank = 'NaN'
+    athlete_percentile_list.append(rank)
+
+# build average and median lines
+median_percentile = []
+mean_percentile = []
+count = 0
+while count < (2*number_years) + 1:
+    temp_list = []
+    for x in similar_players_percentile_graph_list_2:
+        if x[count] != 'NaN':
+            temp_list.append(x[count])
+    mean_percentile.append(statistics.mean(temp_list))
+    median_percentile.append(statistics.median(temp_list))
+    count = count + 1
+median_dollar = []
+mean_dollar = []
+count = 0
+while count < (2*number_years) + 1:
+    temp_list = []
+    for x in similar_players_dollar_graph_list_2:
+        if x[count] != 'NaN':
+            temp_list.append(x[count])
+    mean_dollar.append(statistics.mean(temp_list))
+    median_dollar.append(statistics.median(temp_list))
+    count = count + 1
+
+# build percentile graph
+for i in range(len(similar_players_percentile_graph_list_2)):
+    plt.scatter(x_axis_list,similar_players_percentile_graph_list_2[i])
+    plt.xlim((-1*number_years)-1,number_years+1)
+    plt.ylim(0,100)
+plt.plot(x_axis_list,median_percentile,'purple', label= 'Median')
+plt.plot(x_axis_list,mean_percentile,'g', label= 'Mean')
+plt.plot(x_axis_list,athlete_percentile_list,'r', label= athlete)
+plt.title(athlete + ' ' + str(year_1) + '-' + str(year_2) + ' (' + str(round(athlete_ma,2)) + ')' + ' (+/-' +str(percent_variation*100)+'%)'+' (post '+str(year_start)+')')
+plt.ylabel('Salary Percentile')
+plt.xlabel('Year')
+plt.legend(bbox_to_anchor=(0, 0),loc='lower right')    
+fig = plt.gcf()
+fig.set_size_inches(10, 7)
+plt.show()
+
+# build dollar graph
+for i in range(len(similar_players_dollar_graph_list_2)):
+    plt.scatter(x_axis_list,similar_players_dollar_graph_list_2[i])
+    plt.xlim((-1*number_years)-1,number_years+1)
+    plt.ylim(0,40)
+plt.plot(x_axis_list,median_dollar,'purple', label= 'Median')
+plt.plot(x_axis_list,mean_dollar,'g', label= 'Mean')
+plt.plot(x_axis_list,athlete_salary_list,'r', label= athlete)
+plt.title(athlete + ' ' + str(year_1) + '-' + str(year_2) + ' (' + str(round(athlete_ma,2)) + ')' + ' (+/-' +str(percent_variation*100)+'%)'+' (post '+str(year_start)+')')
+plt.ylabel('Salary $')
+plt.xlabel('Year')
+plt.legend(bbox_to_anchor=(0, 0),loc='lower right')    
+fig = plt.gcf()
+fig.set_size_inches(10, 7)
+plt.show()
+
+# build dataframe for plotly
+plot_name_list = []
+plot_year_list = []
+plot_relative_year_list = []
+plot_salary_list = []
+for season in similar_players_dollar_graph_list:
+    count = -1 * number_years
+    for year in season:
+        plot_name_list.append(year[0])
+        plot_year_list.append(year[1])
+        plot_relative_year_list.append(count)
+        count = (count + 1)
+        plot_salary_list.append(year[2])
+plot_dict = {
+    'Name' : plot_name_list,
+    'Year' : plot_year_list,
+    'Relative Year' : plot_relative_year_list,
+    'Salary' : plot_salary_list}
+plot_dataframe = pd.DataFrame(plot_dict)
+
+def graph(athlete, year_1, year_2, year_start, percent_variation, number_years):
+
+    # calculated inputs
+    ma_lenth = (year_2 - year_1 + 1)
+    first_name = athlete[:athlete.find(' ')]
+    last_name = athlete[athlete.find(' ')+1:]
+
+    # build list of players who played after year_start
+    players_after_start_list = []
+    for player in working_data_list:
+        name = player[0][0]
+        if max_year_dict[name] >= year_start:
+            players_after_start_list.append(player)
+
+    # build list of players who played enough seasons 
+    players_enough_seasons_list = []
+    for player in players_after_start_list:
+        name = player[0][0]
+        if number_seasons_dict[name] >= ma_lenth:
+            players_enough_seasons_list.append(player)
+
+    # calculate moving averages
+    moving_average_war_list = []
+    for player in players_enough_seasons_list:
+        temp_war_list = []
+        for season in player:
+            temp_war_list.append(season[2])
+        count = ma_lenth - 1
+        for season in player[(year_2 - year_1):]:
+            temp_list = []
+            moving_average = statistics.mean(temp_war_list[(count - ma_lenth + 1) : (count + 1)]) # mean is not inclusive of second list number
+            temp_list.append(season[0])
+            temp_list.append(season[1])
+            temp_list.append(moving_average)
+            temp_list.append(season[3])
+            count = count + 1
+            moving_average_war_list.append(temp_list)
+
+    # find athlete and year moving average
+    for season in moving_average_war_list:
+        if season[0] == athlete:
+            if season[1] == year_2:
+                athlete_ma = season[2]
+
+    # find seasons with similar war
+    similar_average_war_list = []
+    for season in moving_average_war_list:
+        if (athlete_ma * (1-percent_variation)) <= season[2] <= (athlete_ma * (1+percent_variation)):
+            if season[0] != athlete:
+                similar_average_war_list.append(season)
+
+    # remove seasons before specified year
+    similar_average_war_list_2 = []
+    for season in similar_average_war_list:
+        if season[1] >= year_start:
+            similar_average_war_list_2.append(season)
+
+    # add in the surrounding seasons
+    all_seasons_similar_average_war_list = []
+    for season in similar_average_war_list_2:
+        count = (-1 * number_years)
+        year = season[1]
+        while count <= number_years:
+            temp_list = []
+            try:
+                salary = all_seasons_salary_dict[season[0]+'_'+str(count+year)]/1000000
+            except:
+                salary = 'NaN'
+            temp_list.append(season[0])
+            temp_list.append(year+count)
+            temp_list.append(salary)
+            all_seasons_similar_average_war_list.append(temp_list)
+            count = (count + 1)
+
+    # replace salary value with salary rank
+    all_seasons_similar_average_war_list_2 = []
+    for season in all_seasons_similar_average_war_list:
+        if season[2] != 'NaN':
+            salary_percentile = round(100*(1 - (ranked_names_dict[season[1]].index(season[0]) / len(ranked_names_dict[season[1]]))),2)
+            season_new = season[:2]
+            season_new.append(salary_percentile)
+            all_seasons_similar_average_war_list_2.append(season_new)
+        else:
+            all_seasons_similar_average_war_list_2.append(season)
+
+    # combine seasons into individual lists to match with y axis
+    similar_players_percentile_graph_list = []
+    similar_players_dollar_graph_list = []
+    count = 0
+    while count < (len(all_seasons_similar_average_war_list_2) / ((2*number_years) + 1)):
+        similar_players_percentile_graph_list.append(all_seasons_similar_average_war_list_2[(count * ((2*number_years) + 1)):((count + 1) * ((2*number_years) + 1))])
+        similar_players_dollar_graph_list.append(all_seasons_similar_average_war_list[(count * ((2*number_years) + 1)):((count + 1) * ((2*number_years) + 1))])
+        count = (count + 1)
+
+    # remove name and year from graph list
+    similar_players_percentile_graph_list_2 = []
+    for season in similar_players_percentile_graph_list:
+        temp_list = []
+        for year in season:
+            temp_list.append(year[2])
+        similar_players_percentile_graph_list_2.append(temp_list)
+    similar_players_dollar_graph_list_2 = []
+    for season in similar_players_dollar_graph_list:
+        temp_list = []
+        for year in season:
+            temp_list.append(year[2])
+        similar_players_dollar_graph_list_2.append(temp_list) 
+
+    # build x axis list
+    x_axis_list = []
+    count = (-1 * number_years)
+    while count <= number_years:
+        x_axis_list.append(count)
+        count = (count + 1)
+
+    # build athlete lines
+    athlete_salary_list = []
+    for x in x_axis_list:
+        year = (year_2 + x)
+        try:
+            salary = all_seasons_salary_dict[athlete+'_'+str(year)]/1000000
+        except:
+            salary = 'NaN'
+        athlete_salary_list.append(salary)
+    athlete_percentile_list = []
+    for x in x_axis_list:
+        try:
+            rank = 100*(1- (ranked_names_dict[(year_2 + x)].index(athlete) / len(ranked_names_dict[(year_2 + x)])))
+        except:
+            rank = 'NaN'
+        athlete_percentile_list.append(rank)
+
+    # build average and median lines
+    median_percentile = []
+    mean_percentile = []
+    count = 0
+    while count < (2*number_years) + 1:
+        temp_list = []
+        for x in similar_players_percentile_graph_list_2:
+            if x[count] != 'NaN':
+                temp_list.append(x[count])
+        mean_percentile.append(statistics.mean(temp_list))
+        median_percentile.append(statistics.median(temp_list))
+        count = count + 1
+    median_dollar = []
+    mean_dollar = []
+    count = 0
+    while count < (2*number_years) + 1:
+        temp_list = []
+        for x in similar_players_dollar_graph_list_2:
+            if x[count] != 'NaN':
+                temp_list.append(x[count])
+        mean_dollar.append(statistics.mean(temp_list))
+        median_dollar.append(statistics.median(temp_list))
+        count = count + 1
+
+    ############ Dollar ############
+    # create dataframe for plot
+    plot_name_list = []
+    plot_year_list = []
+    plot_relative_year_list = []
+    plot_salary_list = []
+    for season in similar_players_dollar_graph_list:
+        count = -1 * number_years
+        for year in season:
+            plot_name_list.append(year[0])
+            plot_year_list.append(year[1])
+            plot_relative_year_list.append(count)
+            count = (count + 1)
+            plot_salary_list.append(year[2])
+    plot_dict = {
+        'Name' : plot_name_list,
+        'Year' : plot_year_list,
+        'Relative Year' : plot_relative_year_list,
+        'Salary' : plot_salary_list}
+    plot_dataframe = pd.DataFrame(plot_dict)
+
+    # average, median, and athlete dataframes
+        # relative year lists
+    relative_year_list = []
+    count = (-1 * number_years)
+    while count <= number_years:
+        relative_year_list.append(count)
+        count = (count + 1)
+
+        # name lists
+    median_name_list = []
+    mean_name_list = []
+    athlete_name_list = []
+    for x in relative_year_list:
+        median_name_list.append('Median')
+        mean_name_list.append('Mean')
+        athlete_name_list.append(athlete)
+
+        # year list for athlete
+    athlete_year_list = []
+    count = year_2 - number_years
+    for x in relative_year_list:
+        athlete_year_list.append(count)
+        count = count + 1
+
+        # dictionaries
+    median_dict = {
+        'Name' : median_name_list,
+        'Relative Year' : relative_year_list,
+        'Salary' : median_dollar}
+    mean_dict = {
+        'Name' : mean_name_list,
+        'Relative Year' : relative_year_list,
+        'Salary' : mean_dollar}
+    athlete_dict = {
+        'Name' : athlete_name_list,
+        'Year' : athlete_year_list,
+        'Relative Year' : relative_year_list,
+        'Salary' : athlete_salary_list}
+
+        # dataframes
+    median_dataframe = pd.DataFrame(median_dict)
+    mean_dataframe = pd.DataFrame(mean_dict)
+    athlete_dataframe = pd.DataFrame(athlete_dict)
+
+
+    fig = px.scatter(plot_dataframe, x="Relative Year", y="Salary", hover_data=['Name']+['Year'])
+    fig.add_scatter(x=athlete_dataframe['Relative Year'],y=athlete_dataframe['Salary'], name=athlete)
+    fig.add_scatter(x=mean_dataframe['Relative Year'],y=mean_dataframe['Salary'], name='Mean')
+    fig.add_scatter(x=median_dataframe['Relative Year'],y=median_dataframe['Salary'], name='Median')
+    fig.update_layout(
+        title=(athlete + ' ' + str(year_1) + '-' + str(year_2) + ' (Average WAR ' + str(round(athlete_ma,2)) + ')' \
+            + ' (+/-' +str(percent_variation*100)+'%)'+' (post '+str(year_start)+') (sample size = ' \
+            + str(len(similar_average_war_list_2))+')') ,
+        xaxis_title="Relative Year",
+        yaxis_title="Salary $")
+    fig.write_html(first_name+'_'+last_name+'_dollar_plot.html', auto_open=True)
+
+
+    ############ Percentile ############
+    # create dataframe for plot
+    plot_name_list = []
+    plot_year_list = []
+    plot_relative_year_list = []
+    plot_percentile_list = []
+    for season in similar_players_percentile_graph_list:
+        count = -1 * number_years
+        for year in season:
+            plot_name_list.append(year[0])
+            plot_year_list.append(year[1])
+            plot_relative_year_list.append(count)
+            count = (count + 1)
+            plot_percentile_list.append(year[2])
+    plot_dict = {
+        'Name' : plot_name_list,
+        'Year' : plot_year_list,
+        'Relative Year' : plot_relative_year_list,
+        'Percentile' : plot_percentile_list}
+    plot_dataframe = pd.DataFrame(plot_dict)
+
+    # average, median, and athlete dataframes
+        # relative year lists
+    relative_year_list = []
+    count = (-1 * number_years)
+    while count <= number_years:
+        relative_year_list.append(count)
+        count = (count + 1)
+
+        # name lists
+    median_name_list = []
+    mean_name_list = []
+    athlete_name_list = []
+    for x in relative_year_list:
+        median_name_list.append('Median')
+        mean_name_list.append('Mean')
+        athlete_name_list.append(athlete)
+
+        # year list for athlete
+    athlete_year_list = []
+    count = year_2 - number_years
+    for x in relative_year_list:
+        athlete_year_list.append(count)
+        count = count + 1
+
+        # dictionaries
+    median_dict = {
+        'Name' : median_name_list,
+        'Relative Year' : relative_year_list,
+        'Percentile' : median_percentile}
+    mean_dict = {
+        'Name' : mean_name_list,
+        'Relative Year' : relative_year_list,
+        'Percentile' : mean_percentile}
+    athlete_dict = {
+        'Name' : athlete_name_list,
+        'Year' : athlete_year_list,
+        'Relative Year' : relative_year_list,
+        'Percentile' : athlete_percentile_list}
+
+        # dataframes
+    median_dataframe = pd.DataFrame(median_dict)
+    mean_dataframe = pd.DataFrame(mean_dict)
+    athlete_dataframe = pd.DataFrame(athlete_dict)
+
+
+    fig = px.scatter(plot_dataframe, x="Relative Year", y="Percentile", hover_data=['Name']+['Year'])
+    fig.add_scatter(x=athlete_dataframe['Relative Year'],y=athlete_dataframe['Percentile'], name=athlete)
+    fig.add_scatter(x=mean_dataframe['Relative Year'],y=mean_dataframe['Percentile'], name='Mean')
+    fig.add_scatter(x=median_dataframe['Relative Year'],y=median_dataframe['Percentile'], name='Median')
+    fig.update_layout(
+        title=(athlete + ' ' + str(year_1) + '-' + str(year_2) + ' (Average WAR ' + str(round(athlete_ma,2)) + ')' \
+            + ' (+/-' +str(percent_variation*100)+'%)'+' (post '+str(year_start)+') (sample size = ' \
+            + str(len(similar_average_war_list_2))+')') ,
+        xaxis_title="Relative Year",
+        yaxis_title="Percentile",
+        yaxis_range=[0,100])
+    fig.write_html(first_name+'_'+last_name+'_percentile_plot.html', auto_open=True)
+    
+
+
+
+    
